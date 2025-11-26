@@ -1,0 +1,21 @@
+﻿.Toastify__toast {
+  padding: 8px 12px !important;
+}
+
+.Toastify__toast-body {
+  padding: 0 !important;
+}
+
+.Toastify__toast--error {
+  border: 1px solid #e85979cc;
+  box-shadow: 3px 3px 0px 0px #e85979cc !important;
+  min-height: 48px !important;
+  padding: 0;
+}
+
+.Toastify__toast--success {
+  border: 1px solid #5ac0b1cc;
+  box-shadow: 3px 3px 0px 0px #5ac0b1cc !important;
+  min-height: 48px !important;
+  padding: 0;
+}
