@@ -11,7 +11,7 @@ import { useDeleteProduct } from '@/hooks/useProductMutations';
 import { ProductDTOResponse, ProductPageResponse } from '@/apis/productAPI';
 import { useGetCategories } from '@/apis/categoryAPI';
 import { Category } from '@/apis/categoryAPI';
-
+import { useProductImageUrls } from '@/hooks/useProductImageUrls';
 
 const PAGE_SIZE = 20;
 
@@ -36,6 +36,19 @@ const ProductsPage = () => {
   const products = data?.data.result || [];
   const totalItems = data?.data.meta.total || 0;
   const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+
+  const { data: publicImageUrls = [] } = useProductImageUrls(products);
+
+  const imageMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    products.forEach((p, index) => {
+      const fileName = p.imageUrl?.[0];
+      if (fileName) {
+        map[fileName] = publicImageUrls[index];
+      }
+      });
+    return map;
+  }, [products, publicImageUrls]);
 
 
   const getPaginationNumbers = () => {
@@ -124,7 +137,7 @@ const ProductsPage = () => {
               {/* Ảnh sản phẩm */}
               <div className="w-full h-40 bg-gray-100 flex items-center justify-center overflow-hidden">
                 <img
-                  src={product.imageUrl?.[0] || "/no-image.png"}
+                  src={imageMap[product.imageUrl?.[0]] || "/no-image.png"}
                   alt={product.name}
                   className="object-cover w-full h-full"
                 />

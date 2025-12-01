@@ -48,11 +48,11 @@ export const getFileUrls = async (
 };
 
 // Public get URLs (no token needed)
-export const getFileUrlsPublic = async (fileNames: string[]): Promise<string[]> => {
-    if (fileNames.length === 0) return [];
-    const response = await axios.post('/api/v1/files/urls/public', { fileNames });
-    return response.data?.data?.fileUrls || [];
-};
+// export const getFileUrlsPublic = async (fileNames: string[]): Promise<string[]> => {
+//     if (fileNames.length === 0) return [];
+//     const response = await axios.post('/api/v1/files/urls/public', { fileNames });
+//     return response.data?.data?.fileUrls || [];
+// };
 
 export const uploadAndGetFileUrls = async (
     files: File[]
