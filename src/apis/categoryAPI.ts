@@ -21,7 +21,7 @@ export const useGetCategories = () => {
     queryFn: async () => {
       const axiosInstance = authAxios();
       const res = await axiosInstance.get("/api/v1/categories");
-      return res.data as Category[];
+      return res.data.data as Category[];
     },
   });
 };

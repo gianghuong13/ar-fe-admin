@@ -1,46 +1,19 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { useQuery } from '@tanstack/react-query';
-import axios from '@/utils/axios';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ROUTES from '@/config/route';
 import Button from '@/components/common/Button';
+import { useProducts } from '@/hooks/useProducts';
 import { useDeleteProduct } from '@/hooks/useProductMutations';
+import { ProductDTOResponse, ProductPageResponse } from '@/apis/productAPI';
+import { useGetCategories } from '@/apis/categoryAPI';
+import { Category } from '@/apis/categoryAPI';
 
-interface Product {
-  id: number;
-  name: string;
-  oldPrice: number;
-  saleRate?: number;
-  quantity: number;
-  imageUrl?: string[];
-  category?: {
-    id: number;
-    name: string;
-  }
-}
-
-interface ProductPageResponse {
-  data: {
-    meta: {
-      page: number;
-      pageSize: number;
-      pages: number;
-      total: number;
-    };
-    result: Product[];
-  };
-}
 
 const PAGE_SIZE = 20;
-
-const fetchProducts = async (page: number): Promise<ProductPageResponse> => {
-  const response = await axios.get(`/api/v1/products?page=${page}&pageSize=${PAGE_SIZE}`);
-  return response.data;
-};
 
 const ProductsPage = () => {
   const router = useRouter();
@@ -49,29 +22,22 @@ const ProductsPage = () => {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['products', page],
-    queryFn: () => fetchProducts(page),
-    placeholderData: (previousData) => previousData
-  });
+  const { data, isLoading, isError } = useProducts(
+    page,
+    PAGE_SIZE,
+    search.trim() === "" ? undefined : search,
+    categoryFilter ? Number(categoryFilter) : undefined
+  );
+  const { data: categories = [] } = useGetCategories();
 
-  const getFinalPrice = (p: Product) =>
+  const getFinalPrice = (p: ProductDTOResponse) =>
     Math.round(p.oldPrice * (1 - (p.saleRate || 0) / 100));
 
-  const products = data?.data?.result ?? [];
-  const totalItems = data?.data?.meta?.total ?? 0;
+  const products = data?.data.result || [];
+  const totalItems = data?.data.meta.total || 0;
   const totalPages = Math.ceil(totalItems / PAGE_SIZE);
 
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
-      const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
-      const matchCategory = categoryFilter ? p.category?.name === categoryFilter : true;
-      return matchSearch && matchCategory;
-    });
-  }, [products, search, categoryFilter]);
-
-  
   const getPaginationNumbers = () => {
     const pages: (number | string)[] = [];
 
@@ -105,15 +71,21 @@ const ProductsPage = () => {
 
   const pagination = getPaginationNumbers();
 
+  useEffect(() => {
+    setPage(1);
+  }, [search, categoryFilter]);
+  
   return (
     <DashboardLayout>
       <div className="p-6">
         
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold mb-6 mr-200">Danh sách sản phẩm</h1>
-          <Button onClick={() => router.push(ROUTES.ADD_PRODUCT)}>
+          <h1 className="text-2xl font-bold mb-6">Danh sách sản phẩm</h1>
+          <div>
+            <Button onClick={() => router.push(ROUTES.ADD_PRODUCT)}>
             + Thêm sản phẩm
           </Button>
+          </div>
         </div>
 
         <div className="flex items-center gap-4 mb-6">
@@ -131,51 +103,75 @@ const ProductsPage = () => {
             onChange={(e) => setCategoryFilter(e.target.value)}
           >
             <option value="">Tất cả danh mục</option>
-            <option value="Bar furniture">Bar furniture</option>
-            <option value="Chair">Chair</option>
-            <option value="Table">Table</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
           </select>
         </div>
 
         {isLoading && <p>Đang tải sản phẩm...</p>}
         {isError && <p>Lỗi tải sản phẩm</p>}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8">
           {products.map((product) => (
-            <div 
+            <div
               key={product.id}
               onClick={() => router.push(ROUTES.PRODUCT_DETAIL(product.id))}
-              className="border rounded p-4 hover:shadow-md transition"
-              >
-              <h2 className="font-semibold">{product.name}</h2>
-              <p>
-                Giá: {getFinalPrice(product).toLocaleString()} VND
-              </p>
-              {product.saleRate ? (
-                <p className="line-through text-gray-400 text-sm">{product.oldPrice.toLocaleString()} VND</p>
-              ) : null}
-              <p>Số lượng: {product.quantity}</p>
-              <p className="text-sm text-gray-500">
-                Danh mục: {product.category?.name ?? 'Không có'}
-              </p>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();           
-                  router.push(ROUTES.EDIT_PRODUCT(product.id));
-                }}
-                className="mt-3 mr-2 px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-              >
-                Sửa
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deleteProductMutation.mutate(product.id);
-                }}
-                className="mt-3 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-              >
-                Xóa
-              </button>
+              className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer bg-white"
+            >
+              {/* Ảnh sản phẩm */}
+              <div className="w-full h-40 bg-gray-100 flex items-center justify-center overflow-hidden">
+                <img
+                  src={product.imageUrl?.[0] || "/no-image.png"}
+                  alt={product.name}
+                  className="object-cover w-full h-full"
+                />
+              </div>
+
+              {/* Nội dung dưới ảnh */}
+              <div className="p-3">
+                <h2 className="font-semibold text-sm mb-1 truncate">{product.name}</h2>
+
+                <p className="font-bold text-red-500 text-sm">
+                  {getFinalPrice(product).toLocaleString()} VND
+                </p>
+
+                {product.saleRate ? (
+                  <p className="line-through text-gray-400 text-xs">
+                    {product.oldPrice.toLocaleString()} VND
+                  </p>
+                ) : null}
+
+                <p className="text-xs text-gray-600">SL: {product.quantity}</p>
+                <p className="text-xs text-gray-500">
+                  {product.category?.name ?? "Không có danh mục"}
+                </p>
+
+                {/* Nút hành động */}
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(ROUTES.EDIT_PRODUCT(product.id));
+                    }}
+                    className="flex-1 px-3 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600"
+                  >
+                    Sửa
+                  </button>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteProductMutation.mutate(product.id);
+                    }}
+                    className="flex-1 px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+                  >
+                    Xóa
+                  </button>
+                </div>
+              </div>
             </div>
           ))}
         </div>

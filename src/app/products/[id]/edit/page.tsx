@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { set, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { useRouter, useParams } from 'next/navigation';
 import { useProduct } from '@/hooks/useProducts';
 import { useUpdateProduct } from '@/hooks/useProductMutations';
@@ -11,14 +11,8 @@ import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import { toastError, toastSuccess } from '@/utils/toast';
 import { UpdateProductDTOPayload } from '@/apis/productAPI';
-
+import { useGetCategories } from '@/apis/categoryAPI';
 import { useDropzone } from 'react-dropzone';
-
-const mockCategories = [
-  { id: 1, name: 'Bar furniture' },
-  { id: 2, name: 'Beds' },
-  { id: 3, name: 'Bookcases & shelving units' },
-];
 
 const UpdateProductPage = () => {
   const router = useRouter();
@@ -27,6 +21,8 @@ const UpdateProductPage = () => {
 
   const { data: product, isLoading } = useProduct(id);
   const updateMutation = useUpdateProduct();
+
+  const { data: categories = [] } = useGetCategories();
 
   const {
     register,
@@ -230,7 +226,7 @@ const UpdateProductPage = () => {
               defaultValue={product.category?.id}
             >
               <option value="">Chọn danh mục</option>
-              {mockCategories.map((cat) => (
+              {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.name}
                 </option>

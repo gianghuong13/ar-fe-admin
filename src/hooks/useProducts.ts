@@ -1,31 +1,21 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { getProducts, getProductById, ProductsResponse } from '@/apis/productAPI';
+import { getProducts, getProductById, ProductPageResponse } from '@/apis/productAPI';
 import { handleApiError } from '@/utils/handleApiError';
 
-// GET ALL PRODUCTS
-// export const useProducts = () => {
-//   return useQuery({
-//     queryKey: ['products'],
-//     queryFn: async () => {
-//       try {
-//         return await getProducts();
-//       } catch (error: any) {
-//         handleApiError(error, 'Failed to fetch products.');
-//         throw error;
-//       }
-//     },
-//   });
-// };
-
 // Hook lấy danh sách products theo page
-export const useProducts = (page: number, pageSize: number = 50) => {
-  return useQuery<ProductsResponse>({
-    queryKey: ['products', page],
+export const useProducts = (
+  page: number, 
+  pageSize: number, 
+  search?: string, 
+  categoryId?: number
+) => {
+  return useQuery<ProductPageResponse>({
+    queryKey: ['products', page, pageSize, search, categoryId],
     queryFn: async () => {
       try {
-        return await getProducts(page, pageSize);
+        return await getProducts(page, pageSize, search, categoryId);
       } catch (error: any) {
         handleApiError(error, 'Failed to fetch products.');
         throw error;

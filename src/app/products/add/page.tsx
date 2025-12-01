@@ -11,17 +11,13 @@ import ROUTES from '@/config/route';
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { uploadMultipleFiles } from '@/apis/fileAPI';
-
-// Tạm thời mock categories
-const mockCategories = [
-  { id: 1, name: 'Bar furniture' },
-  { id: 2, name: 'Beds' },
-  { id: 3, name: 'Bookcases & shelving units' },
-];
+import { useGetCategories } from '@/apis/categoryAPI';
 
 const CreateProductPage = () => {
   const router = useRouter();
   const createMutation = useCreateProduct();
+
+  const { data: categories = [] } = useGetCategories();
 
   const { 
     register, 
@@ -164,7 +160,7 @@ const CreateProductPage = () => {
           disabled={createMutation.isPending}
         >
           <option value="">Chọn danh mục</option>
-          {mockCategories.map((cat) => (
+          {categories.map((cat) => (
             <option key={cat.id} value={cat.id}>
               {cat.name}
             </option>

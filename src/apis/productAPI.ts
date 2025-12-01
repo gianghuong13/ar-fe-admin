@@ -46,9 +46,11 @@ export interface PaginationMeta {
   total: number;
 }
 
-export interface ProductsResponse {
-  meta: PaginationMeta;
-  result: ProductDTOResponse[];
+export interface ProductPageResponse {
+  data: {
+    meta: PaginationMeta;
+    result: ProductDTOResponse[];
+  }
 }
 
 // Helper function to get authenticated axios instance
@@ -69,10 +71,12 @@ const authAxios = () => {
 // GET products có pagination
 export const getProducts = async (
   page: number,
-  pageSize: number
-): Promise<ProductsResponse> => {
-  const res = await axios.get<ProductsResponse>('/api/v1/products', {
-    params: { page, pageSize },
+  pageSize: number,
+  search?: string,
+  categoryId?: number
+): Promise<ProductPageResponse> => {
+  const res = await axios.get<ProductPageResponse>('/api/v1/products', {
+    params: { page, pageSize, search, categoryId },
   });
   return res.data;
 };

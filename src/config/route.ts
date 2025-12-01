@@ -9,9 +9,6 @@ const ROUTES = {
   EDIT_PRODUCT: (id: number) => `/products/${id}/edit`,
 
   CATEGORIES: '/categories',
-  CATEGORY_DETAIL: (id: number) => `/categories/${id}`,
-  ADD_CATEGORY: '/categories/add',
-  EDIT_CATEGORY: (id: number) => `/categories/${id}/edit`,
 
   USERS: '/users',
 
